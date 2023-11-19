@@ -1091,10 +1091,11 @@ AL::uint8 main_console_command_set_image_rotation(const pi_camera_console_comman
 }
 AL::uint8 main_console_command_capture(const pi_camera_console_command& command, pi_camera_console_command_result& command_result)
 {
-	auto error_code = pi_camera_capture(camera, command.args.string.GetCString());
+	AL::uint64 file_size;
+	auto       error_code = pi_camera_capture(camera, command.args.string.GetCString(), &file_size);
 
 	if (error_code == PI_CAMERA_ERROR_CODE_SUCCESS)
-		command_result.lines.PushBack(AL::String::Format("Image saved to %s", command.args.string.GetCString()));
+		command_result.lines.PushBack(AL::String::Format("Saved %llu bytes to %s", file_size, command.args.string.GetCString()));
 
 	return error_code;
 }

@@ -1,6 +1,7 @@
 #include "pi_camera.hpp"
 
 #include <AL/OS/Shell.hpp>
+#include <AL/OS/Timer.hpp>
 #include <AL/OS/Thread.hpp>
 
 #include <AL/Game/Loop.hpp>
@@ -1232,7 +1233,8 @@ bool      pi_camera_net_complete_set_image_rotation(AL::Network::TcpSocket& sock
 	return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_SET_IMAGE_ROTATION, error_code, nullptr, 0);
 }
 
-AL::uint8 pi_camera_net_begin_capture(AL::Network::TcpSocket& socket, const char* file_path)
+// @param file_size can be nullptr
+AL::uint8 pi_camera_net_begin_capture(AL::Network::TcpSocket& socket, const char* file_path, AL::uint64* file_size)
 {
 	if (!pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_CAPTURE, PI_CAMERA_ERROR_CODE_SUCCESS, nullptr, 0))
 		return PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED;
@@ -1248,6 +1250,9 @@ AL::uint8 pi_camera_net_begin_capture(AL::Network::TcpSocket& socket, const char
 
 	if (!pi_camera_file_write(file_path, &packet_buffer[0], packet_header.buffer_size))
 		return PI_CAMERA_ERROR_CODE_FILE_WRITE_ERROR;
+
+	if (file_size != nullptr)
+		*file_size = packet_buffer.GetSize();
 
 	return PI_CAMERA_ERROR_CODE_SUCCESS;
 }
@@ -1490,7 +1495,7 @@ bool pi_camera_service_packet_handler_set_image_rotation(pi_camera_service* came
 bool pi_camera_service_packet_handler_capture(pi_camera_service* camera_service, pi_camera_session* camera_session, const pi_camera_packet_header& header, const AL::uint8* buffer, AL::size_t size)
 {
 	auto      file_path  = AL::String::Format("./pi_image_%lu.jpg", ++camera_service->image_counter);
-	AL::uint8 error_code = pi_camera_capture(camera_service, file_path.GetCString());
+	AL::uint8 error_code = pi_camera_capture(camera_service, file_path.GetCString(), nullptr);
 	bool      result     = pi_camera_net_complete_capture(camera_session->socket, error_code, file_path.GetCString());
 
 	pi_camera_file_delete(file_path.GetCString());
@@ -2813,7 +2818,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_rotation(pi_camera* camera, A
 	return PI_CAMERA_ERROR_CODE_UNDEFINED;
 }
 
-AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* file_path)
+AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* file_path, AL::uint64* file_size)
 {
 	switch (camera->type)
 	{
@@ -2821,13 +2826,13 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* 
 			return pi_camera_cli_execute(static_cast<pi_camera_local*>(camera), file_path);
 
 		case PI_CAMERA_TYPE_REMOTE:
-			return pi_camera_net_begin_capture(static_cast<pi_camera_remote*>(camera)->socket, file_path);
+			return pi_camera_net_begin_capture(static_cast<pi_camera_remote*>(camera)->socket, file_path, file_size);
 
 		case PI_CAMERA_TYPE_SERVICE:
-			return pi_camera_capture(&static_cast<pi_camera_service*>(camera)->local, file_path);
+			return pi_camera_capture(&static_cast<pi_camera_service*>(camera)->local, file_path, file_size);
 
 		case PI_CAMERA_TYPE_SESSION:
-			return pi_camera_capture(&static_cast<pi_camera_session*>(camera)->service->local, file_path);
+			return pi_camera_capture(&static_cast<pi_camera_session*>(camera)->service->local, file_path, file_size);
 	}
 
 	return PI_CAMERA_ERROR_CODE_UNDEFINED;
