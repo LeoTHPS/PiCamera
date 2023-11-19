@@ -346,7 +346,7 @@ bool        pi_camera_console_command_from_string(AL::uint8& value, const AL::St
 	}
 	else if (arg0.Compare("capture_video", AL::True))
 	{
-		value = PI_CAMERA_CONSOLE_COMMAND_CAPTURE;
+		value = PI_CAMERA_CONSOLE_COMMAND_CAPTURE_VIDEO;
 		return true;
 	}
 
@@ -502,7 +502,7 @@ bool        pi_camera_console_command_args_from_string(pi_camera_console_command
 			if (arg_count < 3)
 				return false;
 
-			value.args.uint32 = AL::FromString<AL::uint32>(args[2]);
+			value.args.uint32 = AL::FromString<AL::uint32>(args[1]);
 
 			for (AL::size_t i = 2; i < arg_count; ++i)
 				value.args.string.Append(args[i]);
