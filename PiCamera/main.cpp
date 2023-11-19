@@ -497,17 +497,24 @@ bool        pi_camera_console_command_args_from_string(pi_camera_console_command
 pi_camera*     camera;
 pi_camera_args camera_args;
 
-bool main_args_decode(int argc, char* argv[])
+// @return 0 on no input
+// @return -1 on decoding error
+int  main_args_decode(int argc, char* argv[])
 {
-	if (argc == 1)
+	if (argc == 2)
 	{
+		AL::String arg1(argv[1]);
+
+		if (arg1.Compare("Open", AL::True))
+		{
 #if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
-		camera_args.verb = PI_CAMERA_VERB_OPEN;
-		return true;
+			camera_args.verb = PI_CAMERA_VERB_OPEN;
+			return true;
 #else
-		AL::OS::Console::WriteLine("Platform not supported");
-		return false;
+			AL::OS::Console::WriteLine("Platform not supported");
+			return false;
 #endif
+		}
 	}
 	else if (argc > 2)
 	{
@@ -545,17 +552,117 @@ bool main_args_decode(int argc, char* argv[])
 
 	return false;
 }
-void main_args_show_example(const char* argv0)
+bool main_args_show_example(const char* argv0)
 {
 #if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
-	AL::OS::Console::WriteLine("Local: %s", argv0);
+	if (!AL::OS::Console::WriteLine("Local: %s open", argv0)) return false;
 #endif
 
-	AL::OS::Console::WriteLine("Remote: %s connect host port", argv0);
+	if (!AL::OS::Console::WriteLine("Remote: %s connect host port", argv0)) return false;
 
 #if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
-	AL::OS::Console::WriteLine("Service: %s start host port max_connections", argv0);
+	if (!AL::OS::Console::WriteLine("Service: %s start host port max_connections", argv0)) return false;
 #endif
+
+	return true;
+}
+bool main_args_interactive_prompt(const char* output, AL::String& input)
+{
+	return AL::OS::Console::Write("%s: ", output) && AL::OS::Console::ReadLine(input);
+}
+template<typename T>
+bool main_args_interactive_prompt(const char* output, T& input)
+{
+	AL::String line;
+
+	if (!main_args_interactive_prompt(output, line))
+		return false;
+
+	input = AL::FromString<T>(line);
+
+	return true;
+}
+// @return 0 on error
+// @return -1 on invalid value
+int  main_args_interactive_prompt_verb()
+{
+	AL::String line;
+
+	if (!main_args_interactive_prompt("Open/Connect/Start", line))
+		return 0;
+
+	if (line.Compare("Connect", AL::True))
+	{
+		camera_args.verb = PI_CAMERA_VERB_CONNECT;
+		return 1;
+	}
+#if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
+	else if (line.Compare("Open", AL::True))
+	{
+		camera_args.verb = PI_CAMERA_VERB_OPEN;
+		return 1;
+	}
+	else if (line.Compare("Start", AL::True))
+	{
+		camera_args.verb = PI_CAMERA_VERB_START;
+		return 1;
+	}
+#endif
+
+	return -1;
+}
+bool main_args_interactive_prompt_verb_open()
+{
+	return true;
+}
+bool main_args_interactive_prompt_verb_start()
+{
+	if (!main_args_interactive_prompt("Host", camera_args.host))
+		return false;
+
+	if (!main_args_interactive_prompt("Port", camera_args.port))
+		return false;
+
+	if (!main_args_interactive_prompt("Max Connections", camera_args.max_connections))
+		return false;
+
+	return true;
+}
+bool main_args_interactive_prompt_verb_connect()
+{
+	if (!main_args_interactive_prompt("Host", camera_args.host))
+		return false;
+
+	if (!main_args_interactive_prompt("Port", camera_args.port))
+		return false;
+
+	return true;
+}
+bool main_args_interactive()
+{
+	switch (main_args_interactive_prompt_verb())
+	{
+		case 0:
+			return false;
+
+		case -1:
+			AL::OS::Console::WriteLine("Invalid option");
+			return false;
+	}
+
+	switch (camera_args.verb)
+	{
+		case PI_CAMERA_VERB_OPEN:
+			return main_args_interactive_prompt_verb_open();
+
+		case PI_CAMERA_VERB_START:
+			return main_args_interactive_prompt_verb_start();
+
+		case PI_CAMERA_VERB_CONNECT:
+			return main_args_interactive_prompt_verb_connect();
+	}
+
+	return false;
 }
 
 bool main_init_open_camera()
@@ -571,13 +678,17 @@ bool main_init_open_camera()
 }
 bool main_init(int argc, char* argv[])
 {
-	if (!main_args_decode(argc, argv))
+	switch (main_args_decode(argc, argv))
 	{
-		AL::OS::Console::WriteLine("Error decoding args");
+		case 0:
+			if (!main_args_interactive())
+				return false;
+			break;
 
-		main_args_show_example(argv[0]);
-
-		return false;
+		case -1:
+			AL::OS::Console::WriteLine("Error decoding args");
+			main_args_show_example(argv[0]);
+			return false;
 	}
 
 	if (!main_init_open_camera())
