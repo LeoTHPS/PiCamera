@@ -127,7 +127,7 @@ struct pi_camera_local
 			.brightness        = PI_CAMERA_BRIGHTNESS_DEFAULT,
 			.saturation        = PI_CAMERA_SATURATION_DEFAULT,
 			.white_balance     = PI_CAMERA_WHITE_BALANCE_AUTO,
-			.shutter_speed     = AL::TimeSpan::FromMicroseconds(PI_CAMERA_SHUTTER_SPEED_AUTO),
+			.shutter_speed_us  = PI_CAMERA_SHUTTER_SPEED_AUTO,
 			.exposure_mode     = PI_CAMERA_EXPOSURE_MODE_AUTO,
 			.metoring_mode     = PI_CAMERA_METORING_MODE_MATRIX,
 			.jpg_quality       = PI_CAMERA_JPG_QUALITY_DEFAULT,
@@ -461,47 +461,48 @@ int  pi_camera_net_receive_packet(AL::Network::TcpSocket& socket, pi_camera_pack
 
 auto pi_camera_config_to_packet_buffer(const pi_camera_config& value)
 {
-	pi_camera_packet_buffer packet_buffer(26);
-	packet_buffer[0]                                   = static_cast<AL::uint8>(value.ev);
-	*reinterpret_cast<AL::uint16*>(&packet_buffer[1])  = AL::BitConverter::HostToNetwork(value.iso);
-	packet_buffer[3]                                   = static_cast<AL::uint8>(value.contrast);
-	packet_buffer[4]                                   = static_cast<AL::uint8>(value.sharpness);
-	packet_buffer[5]                                   = static_cast<AL::uint8>(value.brightness);
-	packet_buffer[6]                                   = static_cast<AL::uint8>(value.saturation);
-	packet_buffer[7]                                   = value.white_balance;
-	*reinterpret_cast<AL::uint64*>(&packet_buffer[8])  = AL::BitConverter::HostToNetwork(value.shutter_speed.ToNanoseconds());
-	packet_buffer[16]                                  = value.exposure_mode;
-	packet_buffer[17]                                  = value.metoring_mode;
-	packet_buffer[18]                                  = value.jpg_quality;
-	packet_buffer[19]                                  = value.image_effect;
-	*reinterpret_cast<AL::uint16*>(&packet_buffer[20]) = AL::BitConverter::HostToNetwork(value.image_rotation);
-	*reinterpret_cast<AL::uint16*>(&packet_buffer[22]) = AL::BitConverter::HostToNetwork(value.image_size_width);
-	*reinterpret_cast<AL::uint16*>(&packet_buffer[24]) = AL::BitConverter::HostToNetwork(value.image_size_height);
+	pi_camera_packet_buffer packet_buffer(sizeof(pi_camera_config));
+	auto                    camera_config = reinterpret_cast<pi_camera_config*>(&packet_buffer[0]);
+	camera_config->ev                = AL::BitConverter::HostToNetwork(value.ev);
+	camera_config->iso               = AL::BitConverter::HostToNetwork(value.iso);
+	camera_config->contrast          = AL::BitConverter::HostToNetwork(value.contrast);
+	camera_config->sharpness         = AL::BitConverter::HostToNetwork(value.sharpness);
+	camera_config->brightness        = AL::BitConverter::HostToNetwork(value.brightness);
+	camera_config->saturation        = AL::BitConverter::HostToNetwork(value.saturation);
+	camera_config->white_balance     = AL::BitConverter::HostToNetwork(value.white_balance);
+	camera_config->shutter_speed_us  = AL::BitConverter::HostToNetwork(value.shutter_speed_us);
+	camera_config->exposure_mode     = AL::BitConverter::HostToNetwork(value.exposure_mode);
+	camera_config->metoring_mode     = AL::BitConverter::HostToNetwork(value.metoring_mode);
+	camera_config->jpg_quality       = AL::BitConverter::HostToNetwork(value.jpg_quality);
+	camera_config->image_effect      = AL::BitConverter::HostToNetwork(value.image_effect);
+	camera_config->image_rotation    = AL::BitConverter::HostToNetwork(value.image_rotation);
+	camera_config->image_size_width  = AL::BitConverter::HostToNetwork(value.image_size_width);
+	camera_config->image_size_height = AL::BitConverter::HostToNetwork(value.image_size_height);
 
 	return packet_buffer;
 }
 auto pi_camera_config_from_packet_buffer(const void* buffer, AL::size_t size)
 {
-	auto packet_buffer = reinterpret_cast<const AL::uint8*>(buffer);
+	pi_camera_config camera_config;
+	auto             camera_config_src = reinterpret_cast<const pi_camera_config*>(buffer);
 
-	return pi_camera_config
-	{
-		.ev                = static_cast<AL::int8>(packet_buffer[0]),
-		.iso               = AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint16*>(&packet_buffer[1])),
-		.contrast          = static_cast<AL::int8>(packet_buffer[3]),
-		.sharpness         = static_cast<AL::int8>(packet_buffer[4]),
-		.brightness        = static_cast<AL::int8>(packet_buffer[5]),
-		.saturation        = static_cast<AL::int8>(packet_buffer[6]),
-		.white_balance     = packet_buffer[7],
-		.shutter_speed     = AL::TimeSpan::FromNanoseconds(AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint64*>(&packet_buffer[8]))),
-		.exposure_mode     = packet_buffer[16],
-		.metoring_mode     = packet_buffer[17],
-		.jpg_quality       = packet_buffer[18],
-		.image_effect      = packet_buffer[19],
-		.image_rotation    = AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint16*>(&packet_buffer[20])),
-		.image_size_width  = AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint16*>(&packet_buffer[22])),
-		.image_size_height = AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint16*>(&packet_buffer[24]))
-	};
+	camera_config.ev                = AL::BitConverter::NetworkToHost(camera_config_src->ev);
+	camera_config.iso               = AL::BitConverter::NetworkToHost(camera_config_src->iso);
+	camera_config.contrast          = AL::BitConverter::NetworkToHost(camera_config_src->contrast);
+	camera_config.sharpness         = AL::BitConverter::NetworkToHost(camera_config_src->sharpness);
+	camera_config.brightness        = AL::BitConverter::NetworkToHost(camera_config_src->brightness);
+	camera_config.saturation        = AL::BitConverter::NetworkToHost(camera_config_src->saturation);
+	camera_config.white_balance     = AL::BitConverter::NetworkToHost(camera_config_src->white_balance);
+	camera_config.shutter_speed_us  = AL::BitConverter::NetworkToHost(camera_config_src->shutter_speed_us);
+	camera_config.exposure_mode     = AL::BitConverter::NetworkToHost(camera_config_src->exposure_mode);
+	camera_config.metoring_mode     = AL::BitConverter::NetworkToHost(camera_config_src->metoring_mode);
+	camera_config.jpg_quality       = AL::BitConverter::NetworkToHost(camera_config_src->jpg_quality);
+	camera_config.image_effect      = AL::BitConverter::NetworkToHost(camera_config_src->image_effect);
+	camera_config.image_rotation    = AL::BitConverter::NetworkToHost(camera_config_src->image_rotation);
+	camera_config.image_size_width  = AL::BitConverter::NetworkToHost(camera_config_src->image_size_width);
+	camera_config.image_size_height = AL::BitConverter::NetworkToHost(camera_config_src->image_size_height);
+
+	return camera_config;
 }
 
 AL::uint8 pi_camera_net_begin_is_busy(AL::Network::TcpSocket& socket, bool& value)
@@ -905,7 +906,7 @@ bool      pi_camera_net_complete_set_white_balance(AL::Network::TcpSocket& socke
 	return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_SET_WHITE_BALANCE, error_code, nullptr, 0);
 }
 
-AL::uint8 pi_camera_net_begin_get_shutter_speed(AL::Network::TcpSocket& socket, AL::TimeSpan& value)
+AL::uint8 pi_camera_net_begin_get_shutter_speed(AL::Network::TcpSocket& socket, AL::uint64& value)
 {
 	if (!pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_GET_SHUTTER_SPEED, PI_CAMERA_ERROR_CODE_SUCCESS, nullptr, 0))
 		return PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED;
@@ -919,24 +920,24 @@ AL::uint8 pi_camera_net_begin_get_shutter_speed(AL::Network::TcpSocket& socket, 
 	if (packet_header.error_code != PI_CAMERA_ERROR_CODE_SUCCESS)
 		return packet_header.error_code;
 
-	value = AL::TimeSpan::FromNanoseconds(AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint64*>(&packet_buffer[0])));
+	value = AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint64*>(&packet_buffer[0]));
 
 	return PI_CAMERA_ERROR_CODE_SUCCESS;
 }
-bool      pi_camera_net_complete_get_shutter_speed(AL::Network::TcpSocket& socket, AL::uint8 error_code, AL::TimeSpan value)
+bool      pi_camera_net_complete_get_shutter_speed(AL::Network::TcpSocket& socket, AL::uint8 error_code, AL::uint64 value)
 {
 	if (error_code != PI_CAMERA_ERROR_CODE_SUCCESS)
 		return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_GET_SHUTTER_SPEED, error_code, nullptr, 0);
 
-	auto time = AL::BitConverter::HostToNetwork(value.ToNanoseconds());
+	auto time = AL::BitConverter::HostToNetwork(value);
 
 	return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_GET_SHUTTER_SPEED, PI_CAMERA_ERROR_CODE_SUCCESS, &time, sizeof(AL::uint64));
 }
-AL::uint8 pi_camera_net_begin_set_shutter_speed(AL::Network::TcpSocket& socket, AL::TimeSpan value)
+AL::uint8 pi_camera_net_begin_set_shutter_speed(AL::Network::TcpSocket& socket, AL::uint64 value)
 {
-	auto time = AL::BitConverter::HostToNetwork(value.ToNanoseconds());
+	value = AL::BitConverter::HostToNetwork(value);
 
-	if (!pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_SET_SHUTTER_SPEED, PI_CAMERA_ERROR_CODE_SUCCESS, &time, sizeof(AL::uint64)))
+	if (!pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_SET_SHUTTER_SPEED, PI_CAMERA_ERROR_CODE_SUCCESS, &value, sizeof(AL::uint64)))
 		return PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED;
 
 	pi_camera_packet_header packet_header;
@@ -950,7 +951,7 @@ AL::uint8 pi_camera_net_begin_set_shutter_speed(AL::Network::TcpSocket& socket, 
 
 	return PI_CAMERA_ERROR_CODE_SUCCESS;
 }
-bool      pi_camera_net_complete_set_shutter_speed(AL::Network::TcpSocket& socket, AL::uint8 error_code, AL::TimeSpan value)
+bool      pi_camera_net_complete_set_shutter_speed(AL::Network::TcpSocket& socket, AL::uint8 error_code, AL::uint64 value)
 {
 	return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_SET_SHUTTER_SPEED, error_code, nullptr, 0);
 }
@@ -1406,14 +1407,14 @@ bool pi_camera_service_packet_handler_set_white_balance(pi_camera_service* camer
 }
 bool pi_camera_service_packet_handler_get_shutter_speed(pi_camera_service* camera_service, pi_camera_session* camera_session, const pi_camera_packet_header& header, const AL::uint8* buffer, AL::size_t size)
 {
-	AL::TimeSpan value;
+	AL::uint64 value;
 	AL::uint8    error_code = pi_camera_get_shutter_speed(camera_service, &value);
 
 	return pi_camera_net_complete_get_shutter_speed(camera_session->socket, error_code, value);
 }
 bool pi_camera_service_packet_handler_set_shutter_speed(pi_camera_service* camera_service, pi_camera_session* camera_session, const pi_camera_packet_header& header, const AL::uint8* buffer, AL::size_t size)
 {
-	auto      value      = AL::TimeSpan::FromNanoseconds(AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint64*>(buffer)));
+	auto      value      = AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint64*>(buffer));
 	AL::uint8 error_code = pi_camera_set_shutter_speed(camera_service, value);
 
 	return pi_camera_net_complete_set_shutter_speed(camera_session->socket, error_code, value);
@@ -1734,7 +1735,7 @@ inline auto pi_camera_clamp_saturation(AL::int8 value)
 {
 	return AL::Math::Clamp<AL::int8>(value, PI_CAMERA_SATURATION_MIN, PI_CAMERA_SATURATION_MIN);
 }
-inline auto pi_camera_clamp_shutter_speed(AL::TimeSpan value)
+inline auto pi_camera_clamp_shutter_speed(AL::uint64 value)
 {
 	return value;
 }
@@ -1854,8 +1855,8 @@ void      pi_camera_cli_build_params_append_white_balance(AL::StringBuilder& sb,
 }
 void      pi_camera_cli_build_params_append_shutter_speed(AL::StringBuilder& sb, const pi_camera_config& camera_config)
 {
-	if (camera_config.shutter_speed.ToMicroseconds() != 0)
-		pi_camera_cli_build_params_append(sb, "-ss", camera_config.shutter_speed.ToMicroseconds());
+	if (camera_config.shutter_speed_us != 0)
+		pi_camera_cli_build_params_append(sb, "-ss", camera_config.shutter_speed_us);
 }
 void      pi_camera_cli_build_params_append_exposure_mode(AL::StringBuilder& sb, const pi_camera_config& camera_config)
 {
@@ -2299,7 +2300,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_config(pi_camera* camera, const pi_
 			static_cast<pi_camera_local*>(camera)->config.brightness        = pi_camera_clamp_brightness(value->brightness);
 			static_cast<pi_camera_local*>(camera)->config.saturation        = pi_camera_clamp_saturation(value->saturation);
 			static_cast<pi_camera_local*>(camera)->config.white_balance     = value->white_balance;
-			static_cast<pi_camera_local*>(camera)->config.shutter_speed     = pi_camera_clamp_shutter_speed(value->shutter_speed);
+			static_cast<pi_camera_local*>(camera)->config.shutter_speed_us  = pi_camera_clamp_shutter_speed(value->shutter_speed_us);
 			static_cast<pi_camera_local*>(camera)->config.exposure_mode     = value->exposure_mode;
 			static_cast<pi_camera_local*>(camera)->config.metoring_mode     = value->metoring_mode;
 			static_cast<pi_camera_local*>(camera)->config.jpg_quality       = pi_camera_clamp_jpg_quality(value->jpg_quality);
@@ -2533,12 +2534,12 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_white_balance(pi_camera* camera, AL
 	return PI_CAMERA_ERROR_CODE_UNDEFINED;
 }
 
-AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_shutter_speed(pi_camera* camera, AL::TimeSpan* value)
+AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_shutter_speed(pi_camera* camera, AL::uint64* value)
 {
 	switch (camera->type)
 	{
 		case PI_CAMERA_TYPE_LOCAL:
-			*value = static_cast<pi_camera_local*>(camera)->config.shutter_speed;
+			*value = static_cast<pi_camera_local*>(camera)->config.shutter_speed_us;
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2553,12 +2554,12 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_shutter_speed(pi_camera* camera, AL
 
 	return PI_CAMERA_ERROR_CODE_UNDEFINED;
 }
-AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_shutter_speed(pi_camera* camera, AL::TimeSpan value)
+AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_shutter_speed(pi_camera* camera, AL::uint64 value)
 {
 	switch (camera->type)
 	{
 		case PI_CAMERA_TYPE_LOCAL:
-			static_cast<pi_camera_local*>(camera)->config.shutter_speed = pi_camera_clamp_shutter_speed(value);
+			static_cast<pi_camera_local*>(camera)->config.shutter_speed_us = pi_camera_clamp_shutter_speed(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 

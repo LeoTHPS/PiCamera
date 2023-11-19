@@ -501,7 +501,7 @@ bool main_args_decode(int argc, char* argv[])
 {
 	if (argc == 1)
 	{
-#if defined(AL_PLATFORM_LINUX)
+#if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
 		camera_args.verb = PI_CAMERA_VERB_OPEN;
 		return true;
 #else
@@ -526,7 +526,7 @@ bool main_args_decode(int argc, char* argv[])
 		}
 		else if (arg1.Compare("start", AL::True))
 		{
-#if defined(AL_PLATFORM_LINUX)
+#if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
 			camera_args.verb = PI_CAMERA_VERB_START;
 
 			if (argc == 5)
@@ -547,13 +547,13 @@ bool main_args_decode(int argc, char* argv[])
 }
 void main_args_show_example(const char* argv0)
 {
-#if defined(AL_PLATFORM_LINUX)
+#if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
 	AL::OS::Console::WriteLine("Local: %s", argv0);
 #endif
 
 	AL::OS::Console::WriteLine("Remote: %s connect host port", argv0);
 
-#if defined(AL_PLATFORM_LINUX)
+#if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
 	AL::OS::Console::WriteLine("Service: %s start host port max_connections", argv0);
 #endif
 }
@@ -687,6 +687,9 @@ bool main_display_info()
 {
 	switch (camera_args.verb)
 	{
+		case PI_CAMERA_VERB_OPEN:
+			return AL::OS::Console::WriteLine("Connected to local PiCamera service");
+
 		case PI_CAMERA_VERB_START:
 			return AL::OS::Console::WriteLine("Started PiCamera service");
 
@@ -796,7 +799,7 @@ AL::uint8 main_console_command_get_config(const pi_camera_console_command& comma
 		command_result.lines.PushBack(AL::String::Format("Brightness: %i", value.brightness));
 		command_result.lines.PushBack(AL::String::Format("Saturation: %i", value.saturation));
 		command_result.lines.PushBack(AL::String::Format("White Balance: %s", (value.white_balance == PI_CAMERA_WHITE_BALANCE_AUTO) ? "auto" : AL::ToString(value.white_balance).GetCString()));
-		command_result.lines.PushBack(AL::String::Format("Shutter Speed: %s", (value.shutter_speed.ToMicroseconds() == 0) ? "auto" : AL::String::Format("%lluus", value.shutter_speed.ToMicroseconds()).GetCString()));
+		command_result.lines.PushBack(AL::String::Format("Shutter Speed: %s", (value.shutter_speed_us == 0) ? "auto" : AL::String::Format("%lluus", value.shutter_speed_us).GetCString()));
 		command_result.lines.PushBack(AL::String::Format("Exposure Mode: %s", (value.exposure_mode == PI_CAMERA_EXPOSURE_MODE_AUTO) ? "auto" : AL::ToString(value.exposure_mode).GetCString()));
 		command_result.lines.PushBack(AL::String::Format("Metoring Mode: %s", (value.metoring_mode == PI_CAMERA_METORING_MODE_MATRIX) ? "matrix" : AL::ToString(value.metoring_mode).GetCString()));
 		command_result.lines.PushBack(AL::String::Format("JPG Quality: %u", value.jpg_quality));
@@ -879,17 +882,17 @@ AL::uint8 main_console_command_set_white_balance(const pi_camera_console_command
 }
 AL::uint8 main_console_command_get_shutter_speed(const pi_camera_console_command& command, pi_camera_console_command_result& command_result)
 {
-	AL::TimeSpan value;
-	auto         error_code = pi_camera_get_shutter_speed(camera, &value);
+	AL::uint64 value;
+	auto       error_code = pi_camera_get_shutter_speed(camera, &value);
 
 	if (error_code == PI_CAMERA_ERROR_CODE_SUCCESS)
-		command_result.lines.PushBack(AL::String::Format("%lluus", value.ToMicroseconds()));
+		command_result.lines.PushBack((value == 0) ? "auto" : AL::String::Format("%lluus", value));
 
 	return error_code;
 }
 AL::uint8 main_console_command_set_shutter_speed(const pi_camera_console_command& command, pi_camera_console_command_result& command_result)
 {
-	return pi_camera_set_shutter_speed(camera, AL::TimeSpan::FromMicroseconds(command.args.uint64));
+	return pi_camera_set_shutter_speed(camera, command.args.uint64);
 }
 AL::uint8 main_console_command_get_exposure_mode(const pi_camera_console_command& command, pi_camera_console_command_result& command_result)
 {

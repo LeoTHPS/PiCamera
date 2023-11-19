@@ -164,24 +164,26 @@ enum PI_CAMERA_ERROR_CODES : AL::uint8
 	PI_CAMERA_ERROR_CODE_UNDEFINED
 };
 
+#pragma pack(push, 1)
 struct pi_camera_config
 {
-	AL::int8     ev;
-	AL::uint16   iso;
-	AL::int8     contrast;
-	AL::int8     sharpness;
-	AL::int8     brightness;
-	AL::int8     saturation;
-	AL::uint8    white_balance;
-	AL::TimeSpan shutter_speed;
-	AL::uint8    exposure_mode;
-	AL::uint8    metoring_mode;
-	AL::uint8    jpg_quality;
-	AL::uint8    image_effect;
-	AL::uint16   image_rotation;
-	AL::uint16   image_size_width;
-	AL::uint16   image_size_height;
+	AL::int8   ev;
+	AL::uint16 iso;
+	AL::int8   contrast;
+	AL::int8   sharpness;
+	AL::int8   brightness;
+	AL::int8   saturation;
+	AL::uint8  white_balance;
+	AL::uint64 shutter_speed_us;
+	AL::uint8  exposure_mode;
+	AL::uint8  metoring_mode;
+	AL::uint8  jpg_quality;
+	AL::uint8  image_effect;
+	AL::uint16 image_rotation;
+	AL::uint16 image_size_width;
+	AL::uint16 image_size_height;
 };
+#pragma pack(pop)
 
 extern "C"
 {
@@ -221,8 +223,8 @@ extern "C"
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_white_balance(pi_camera* camera, AL::uint8* value);
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_white_balance(pi_camera* camera, AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_shutter_speed(pi_camera* camera, AL::TimeSpan* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_shutter_speed(pi_camera* camera, AL::TimeSpan value);
+	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_shutter_speed(pi_camera* camera, AL::uint64* value);
+	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_shutter_speed(pi_camera* camera, AL::uint64 value);
 
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_exposure_mode(pi_camera* camera, AL::uint8* value);
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_exposure_mode(pi_camera* camera, AL::uint8 value);

@@ -1,6 +1,7 @@
 RM              ?= rm -f
 CXX             ?= g++
 
+# CPPFLAGS        += -DPI_CAMERA_DEBUG
 CXXFLAGS        += -Wall -Wfatal-errors -std=c++20 -I. -I"$(AL_INCLUDE)"
 
 SOURCE_FILES     = main.cpp pi_camera.cpp
