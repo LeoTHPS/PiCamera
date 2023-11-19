@@ -2101,7 +2101,7 @@ AL::uint8 pi_camera_cli_video_execute(pi_camera_local* camera_local, const char*
 		);
 
 		AL::OS::Shell::Execute(
-			"mp4box",
+			"MP4Box",
 			AL::String::Format("-add \"%s.h264\" \"%s\"", file_path, file_path)
 		);
 
