@@ -185,6 +185,25 @@ struct pi_camera_config
 };
 #pragma pack(pop)
 
+constexpr pi_camera_config PI_CAMERA_CONFIG_DEFAULT =
+{
+	.ev                = PI_CAMERA_EV_DEFAULT,
+	.iso               = PI_CAMERA_ISO_100,
+	.contrast          = PI_CAMERA_CONTRAST_DEFAULT,
+	.sharpness         = PI_CAMERA_SHARPNESS_DEFAULT,
+	.brightness        = PI_CAMERA_BRIGHTNESS_DEFAULT,
+	.saturation        = PI_CAMERA_SATURATION_DEFAULT,
+	.white_balance     = PI_CAMERA_WHITE_BALANCE_AUTO,
+	.shutter_speed_us  = PI_CAMERA_SHUTTER_SPEED_AUTO,
+	.exposure_mode     = PI_CAMERA_EXPOSURE_MODE_AUTO,
+	.metoring_mode     = PI_CAMERA_METORING_MODE_MATRIX,
+	.jpg_quality       = PI_CAMERA_JPG_QUALITY_DEFAULT,
+	.image_effect      = PI_CAMERA_IMAGE_EFFECT_NONE,
+	.image_rotation    = PI_CAMERA_IMAGE_ROTATION_DEFAULT,
+	.image_size_width  = PI_CAMERA_IMAGE_SIZE_WIDTH_MAX,
+	.image_size_height = PI_CAMERA_IMAGE_SIZE_HEIGHT_MAX
+};
+
 extern "C"
 {
 	PI_CAMERA_API_EXPORT const char* PI_CAMERA_API_CALL pi_camera_get_error_string(AL::uint8 value);
