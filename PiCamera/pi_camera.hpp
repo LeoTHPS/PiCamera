@@ -151,6 +151,17 @@ enum PI_CAMERA_IMAGE_ROTATION : AL::uint16
 	PI_CAMERA_IMAGE_ROTATION_DEFAULT = 0
 };
 
+enum PI_CAMERA_VIDEO_BIT_RATE : AL::uint32
+{
+	PI_CAMERA_VIDEO_BIT_RATE_DEFAULT = 15000000
+};
+
+enum PI_CAMERA_VIDEO_FRAME_RATE : AL::uint8
+{
+	PI_CAMERA_VIDEO_FRAME_RATE_MIN = 2,
+	PI_CAMERA_VIDEO_FRAME_RATE_MAX = 30
+};
+
 enum PI_CAMERA_ERROR_CODES : AL::uint8
 {
 	PI_CAMERA_ERROR_CODE_SUCCESS,
@@ -182,6 +193,8 @@ struct pi_camera_config
 	AL::uint16 image_rotation;
 	AL::uint16 image_size_width;
 	AL::uint16 image_size_height;
+	AL::uint32 video_bit_rate;
+	AL::uint8  video_frame_rate;
 };
 #pragma pack(pop)
 
@@ -201,7 +214,9 @@ constexpr pi_camera_config PI_CAMERA_CONFIG_DEFAULT =
 	.image_effect      = PI_CAMERA_IMAGE_EFFECT_NONE,
 	.image_rotation    = PI_CAMERA_IMAGE_ROTATION_DEFAULT,
 	.image_size_width  = PI_CAMERA_IMAGE_SIZE_WIDTH_MAX,
-	.image_size_height = PI_CAMERA_IMAGE_SIZE_HEIGHT_MAX
+	.image_size_height = PI_CAMERA_IMAGE_SIZE_HEIGHT_MAX,
+	.video_bit_rate    = PI_CAMERA_VIDEO_BIT_RATE_DEFAULT,
+	.video_frame_rate  = PI_CAMERA_VIDEO_FRAME_RATE_MAX
 };
 
 extern "C"
@@ -262,6 +277,12 @@ extern "C"
 
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_image_rotation(pi_camera* camera, AL::uint16* value);
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_rotation(pi_camera* camera, AL::uint16 value);
+
+	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_video_bit_rate(pi_camera* camera, AL::uint32* value);
+	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_video_bit_rate(pi_camera* camera, AL::uint32 value);
+
+	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_video_frame_rate(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_video_frame_rate(pi_camera* camera, AL::uint8 value);
 
 	// @param file_size can be nullptr
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* file_path, AL::uint64* file_size);
