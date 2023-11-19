@@ -13,43 +13,44 @@ enum PI_CAMERA_VERBS : AL::uint8
 
 enum PI_CAMERA_CONSOLE_COMMANDS : AL::uint8
 {
-	                                              // Input     Output    Arg0      Arg1                           Arg2  Arg3
+	                                              // Input     Output    Arg0          Arg1                           Arg2  Arg3
 	PI_CAMERA_CONSOLE_COMMAND_HELP,               // void      void      help
 	PI_CAMERA_CONSOLE_COMMAND_EXIT,               // void      void      exit
-	PI_CAMERA_CONSOLE_COMMAND_IS_BUSY,            // void      bool      is        busy
-	PI_CAMERA_CONSOLE_COMMAND_IS_REMOTE,          // void      bool      is        remote
-	PI_CAMERA_CONSOLE_COMMAND_IS_SERVICE,         // void      bool      is        service
-	PI_CAMERA_CONSOLE_COMMAND_IS_CONNECTED,       // void      bool      is        connected
-	PI_CAMERA_CONSOLE_COMMAND_GET_EV,             // void      int8      get       e|ev
-	PI_CAMERA_CONSOLE_COMMAND_SET_EV,             // int8      void      set       e|ev                           value
-	PI_CAMERA_CONSOLE_COMMAND_GET_ISO,            // void      uint16    get       i|iso
-	PI_CAMERA_CONSOLE_COMMAND_SET_ISO,            // uint16    uint8     set       i|iso                          value
-	PI_CAMERA_CONSOLE_COMMAND_GET_CONFIG,         // void      *         get       config
-	PI_CAMERA_CONSOLE_COMMAND_GET_CONTRAST,       // void      int8      get       c|contrast
-	PI_CAMERA_CONSOLE_COMMAND_SET_CONTRAST,       // int8      void      set       c|contrast                     value
-	PI_CAMERA_CONSOLE_COMMAND_GET_SHARPNESS,      // void      int8      get       sh|sharpness
-	PI_CAMERA_CONSOLE_COMMAND_SET_SHARPNESS,      // int8      void      set       sh|sharpness                   value
-	PI_CAMERA_CONSOLE_COMMAND_GET_BRIGHTNESS,     // void      uint8     get       br|brightness
-	PI_CAMERA_CONSOLE_COMMAND_SET_BRIGHTNESS,     // uint8     void      set       br|brightness                  value
-	PI_CAMERA_CONSOLE_COMMAND_GET_SATURATION,     // void      int8      get       sat|saturation
-	PI_CAMERA_CONSOLE_COMMAND_SET_SATURATION,     // int8      void      set       sat|saturation                 value
-	PI_CAMERA_CONSOLE_COMMAND_GET_WHITE_BALANCE,  // void      uint8     get       wb|white_balance
-	PI_CAMERA_CONSOLE_COMMAND_SET_WHITE_BALANCE,  // uint8     void      set       wb|white_balance               value
-	PI_CAMERA_CONSOLE_COMMAND_GET_SHUTTER_SPEED,  // void      uint64    get       ss|shutter|shutter_speed
-	PI_CAMERA_CONSOLE_COMMAND_SET_SHUTTER_SPEED,  // uint64    void      set       ss|shutter|shutter_speed       value
-	PI_CAMERA_CONSOLE_COMMAND_GET_EXPOSURE_MODE,  // void      uint8     get       em|exposure|exposure_mode
-	PI_CAMERA_CONSOLE_COMMAND_SET_EXPOSURE_MODE,  // uint8     void      set       em|exposure|exposure_mode      value
-	PI_CAMERA_CONSOLE_COMMAND_GET_METORING_MODE,  // void      uint8     get       mm|metoring|metoring_mode
-	PI_CAMERA_CONSOLE_COMMAND_SET_METORING_MODE,  // uint8     void      set       mm|metoring|metoring_mode      value
-	PI_CAMERA_CONSOLE_COMMAND_GET_JPG_QUALITY,    // void      uint8     get       jq|quality|jpg_quality
-	PI_CAMERA_CONSOLE_COMMAND_SET_JPG_QUALITY,    // uint8     void      set       jq|quality|jpg_quality         value
-	PI_CAMERA_CONSOLE_COMMAND_GET_IMAGE_SIZE,     // void      uint16[2] get       is|size|image_size
-	PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_SIZE,     // uint16[2] void      set       is|size|image_size             width height
-	PI_CAMERA_CONSOLE_COMMAND_GET_IMAGE_EFFECT,   // void      uint8     get       ie|effect|image_effect
-	PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_EFFECT,   // uint8     void      set       ie|effect|image_effect         value
-	PI_CAMERA_CONSOLE_COMMAND_GET_IMAGE_ROTATION, // void      uint16    get       ir|rot|rotation|image_rotation
-	PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_ROTATION, // uint16    void      set       ir|rot|rotation|image_rotation value
-	PI_CAMERA_CONSOLE_COMMAND_CAPTURE,            // string    void      capture   "/path/to/destination/file"
+	PI_CAMERA_CONSOLE_COMMAND_IS_BUSY,            // void      bool      is            busy
+	PI_CAMERA_CONSOLE_COMMAND_IS_REMOTE,          // void      bool      is            remote
+	PI_CAMERA_CONSOLE_COMMAND_IS_SERVICE,         // void      bool      is            service
+	PI_CAMERA_CONSOLE_COMMAND_IS_CONNECTED,       // void      bool      is            connected
+	PI_CAMERA_CONSOLE_COMMAND_GET_EV,             // void      int8      get           e|ev
+	PI_CAMERA_CONSOLE_COMMAND_SET_EV,             // int8      void      set           e|ev                           value
+	PI_CAMERA_CONSOLE_COMMAND_GET_ISO,            // void      uint16    get           i|iso
+	PI_CAMERA_CONSOLE_COMMAND_SET_ISO,            // uint16    uint8     set           i|iso                          value
+	PI_CAMERA_CONSOLE_COMMAND_GET_CONFIG,         // void      *         get           config
+	PI_CAMERA_CONSOLE_COMMAND_GET_CONTRAST,       // void      int8      get           c|contrast
+	PI_CAMERA_CONSOLE_COMMAND_SET_CONTRAST,       // int8      void      set           c|contrast                     value
+	PI_CAMERA_CONSOLE_COMMAND_GET_SHARPNESS,      // void      int8      get           sh|sharpness
+	PI_CAMERA_CONSOLE_COMMAND_SET_SHARPNESS,      // int8      void      set           sh|sharpness                   value
+	PI_CAMERA_CONSOLE_COMMAND_GET_BRIGHTNESS,     // void      uint8     get           br|brightness
+	PI_CAMERA_CONSOLE_COMMAND_SET_BRIGHTNESS,     // uint8     void      set           br|brightness                  value
+	PI_CAMERA_CONSOLE_COMMAND_GET_SATURATION,     // void      int8      get           sat|saturation
+	PI_CAMERA_CONSOLE_COMMAND_SET_SATURATION,     // int8      void      set           sat|saturation                 value
+	PI_CAMERA_CONSOLE_COMMAND_GET_WHITE_BALANCE,  // void      uint8     get           wb|white_balance
+	PI_CAMERA_CONSOLE_COMMAND_SET_WHITE_BALANCE,  // uint8     void      set           wb|white_balance               value
+	PI_CAMERA_CONSOLE_COMMAND_GET_SHUTTER_SPEED,  // void      uint64    get           ss|shutter|shutter_speed
+	PI_CAMERA_CONSOLE_COMMAND_SET_SHUTTER_SPEED,  // uint64    void      set           ss|shutter|shutter_speed       value
+	PI_CAMERA_CONSOLE_COMMAND_GET_EXPOSURE_MODE,  // void      uint8     get           em|exposure|exposure_mode
+	PI_CAMERA_CONSOLE_COMMAND_SET_EXPOSURE_MODE,  // uint8     void      set           em|exposure|exposure_mode      value
+	PI_CAMERA_CONSOLE_COMMAND_GET_METORING_MODE,  // void      uint8     get           mm|metoring|metoring_mode
+	PI_CAMERA_CONSOLE_COMMAND_SET_METORING_MODE,  // uint8     void      set           mm|metoring|metoring_mode      value
+	PI_CAMERA_CONSOLE_COMMAND_GET_JPG_QUALITY,    // void      uint8     get           jq|quality|jpg_quality
+	PI_CAMERA_CONSOLE_COMMAND_SET_JPG_QUALITY,    // uint8     void      set           jq|quality|jpg_quality         value
+	PI_CAMERA_CONSOLE_COMMAND_GET_IMAGE_SIZE,     // void      uint16[2] get           is|size|image_size
+	PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_SIZE,     // uint16[2] void      set           is|size|image_size             width height
+	PI_CAMERA_CONSOLE_COMMAND_GET_IMAGE_EFFECT,   // void      uint8     get           ie|effect|image_effect
+	PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_EFFECT,   // uint8     void      set           ie|effect|image_effect         value
+	PI_CAMERA_CONSOLE_COMMAND_GET_IMAGE_ROTATION, // void      uint16    get           ir|rot|rotation|image_rotation
+	PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_ROTATION, // uint16    void      set           ir|rot|rotation|image_rotation value
+	PI_CAMERA_CONSOLE_COMMAND_CAPTURE,            // string    void      capture       "/path/to/destination/file"
+	PI_CAMERA_CONSOLE_COMMAND_CAPTURE_VIDEO,      // string    void      capture_video duration                      "/path/to/destination/file"
 
 	PI_CAMERA_CONSOLE_COMMAND_COUNT
 };
@@ -76,6 +77,7 @@ struct pi_camera_console_command
 			AL::uint8  uint8;
 			AL::uint16 uint16;
 			AL::uint16 uint16_2[2];
+			AL::uint32 uint32;
 			AL::uint64 uint64;
 		};
 	} args;
@@ -342,6 +344,11 @@ bool        pi_camera_console_command_from_string(AL::uint8& value, const AL::St
 		value = PI_CAMERA_CONSOLE_COMMAND_CAPTURE;
 		return true;
 	}
+	else if (arg0.Compare("capture_video", AL::True))
+	{
+		value = PI_CAMERA_CONSOLE_COMMAND_CAPTURE;
+		return true;
+	}
 
 	return false;
 }
@@ -486,6 +493,18 @@ bool        pi_camera_console_command_args_from_string(pi_camera_console_command
 				return false;
 
 			for (AL::size_t i = 1; i < arg_count; ++i)
+				value.args.string.Append(args[i]);
+		}
+		return true;
+
+		case PI_CAMERA_CONSOLE_COMMAND_CAPTURE_VIDEO:
+		{
+			if (arg_count < 3)
+				return false;
+
+			value.args.uint32 = AL::FromString<AL::uint32>(args[2]);
+
+			for (AL::size_t i = 2; i < arg_count; ++i)
 				value.args.string.Append(args[i]);
 		}
 		return true;
@@ -1099,6 +1118,16 @@ AL::uint8 main_console_command_capture(const pi_camera_console_command& command,
 
 	return error_code;
 }
+AL::uint8 main_console_command_capture_video(const pi_camera_console_command& command, pi_camera_console_command_result& command_result)
+{
+	AL::uint64 file_size;
+	auto       error_code = pi_camera_capture_video(camera, command.args.string.GetCString(), command.args.uint32, &file_size);
+
+	if (error_code == PI_CAMERA_ERROR_CODE_SUCCESS)
+		command_result.lines.PushBack(AL::String::Format("Saved %llu bytes to %s", file_size, command.args.string.GetCString()));
+
+	return error_code;
+}
 
 constexpr pi_camera_console_command_context CONSOLE_COMMANDS[PI_CAMERA_CONSOLE_COMMAND_COUNT] =
 {
@@ -1137,7 +1166,8 @@ constexpr pi_camera_console_command_context CONSOLE_COMMANDS[PI_CAMERA_CONSOLE_C
 	{ PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_EFFECT,   &main_console_command_set_image_effect,   "set ie|effect|image_effect value" },
 	{ PI_CAMERA_CONSOLE_COMMAND_GET_IMAGE_ROTATION, &main_console_command_get_image_rotation, "get ir|rot|rotation|image_rotation" },
 	{ PI_CAMERA_CONSOLE_COMMAND_SET_IMAGE_ROTATION, &main_console_command_set_image_rotation, "set ir|rot|rotation|image_rotation value" },
-	{ PI_CAMERA_CONSOLE_COMMAND_CAPTURE,            &main_console_command_capture,            "capture /path/to/file" }
+	{ PI_CAMERA_CONSOLE_COMMAND_CAPTURE,            &main_console_command_capture,            "capture /path/to/file" },
+	{ PI_CAMERA_CONSOLE_COMMAND_CAPTURE_VIDEO,      &main_console_command_capture_video,      "capture_video duration /path/to/file" }
 };
 
 template<AL::size_t ... INDEXES>
