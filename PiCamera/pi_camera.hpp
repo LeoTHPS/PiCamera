@@ -265,4 +265,6 @@ extern "C"
 
 	// @param file_size can be nullptr
 	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* file_path, AL::uint64* file_size);
+	// @param file_size can be nullptr
+	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture_video(pi_camera* camera, const char* file_path, AL::uint32 video_length_seconds, AL::uint64* file_size);
 }

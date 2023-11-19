@@ -76,6 +76,7 @@ enum PI_CAMERA_OPCODES : AL::uint8
 	PI_CAMERA_OPCODE_SET_IMAGE_ROTATION,
 
 	PI_CAMERA_OPCODE_CAPTURE,
+	PI_CAMERA_OPCODE_CAPTURE_VIDEO,
 
 	PI_CAMERA_OPCODE_COUNT
 };
@@ -116,6 +117,7 @@ struct pi_camera_local
 
 	pi_camera_config config;
 	AL::String       cli_params;
+	AL::String       cli_params_video;
 
 	pi_camera_local()
 		: pi_camera(PI_CAMERA_TYPE_LOCAL),
@@ -165,7 +167,8 @@ struct pi_camera_service
 	AL::Network::TcpSocket  socket;
 	AL::OS::Thread          thread;
 	pi_camera_session_list  sessions;
-	AL::uint32              image_counter = 0;
+	AL::uint64              image_counter = 0;
+	AL::uint64              video_counter = 0;
 	AL::size_t              max_connections;
 	AL::Network::IPEndPoint local_end_point;
 
@@ -1274,6 +1277,49 @@ bool      pi_camera_net_complete_capture(AL::Network::TcpSocket& socket, AL::uin
 	return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_CAPTURE, PI_CAMERA_ERROR_CODE_SUCCESS, &packet_buffer[0], packet_buffer.GetSize());
 }
 
+// @param file_size can be nullptr
+AL::uint8 pi_camera_net_begin_capture_video(AL::Network::TcpSocket& socket, const char* file_path, AL::uint32 video_length_seconds, AL::uint64* file_size)
+{
+	video_length_seconds = AL::BitConverter::HostToNetwork(video_length_seconds);
+
+	if (!pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_CAPTURE_VIDEO, PI_CAMERA_ERROR_CODE_SUCCESS, &video_length_seconds, sizeof(AL::uint32)))
+		return PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED;
+
+	pi_camera_packet_header packet_header;
+	pi_camera_packet_buffer packet_buffer;
+
+	if (pi_camera_net_receive_packet(socket, packet_header, packet_buffer, false) == 0)
+		return PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED;
+
+	if (packet_header.error_code != PI_CAMERA_ERROR_CODE_SUCCESS)
+		return packet_header.error_code;
+
+	if (!pi_camera_file_write(file_path, &packet_buffer[0], packet_header.buffer_size))
+		return PI_CAMERA_ERROR_CODE_FILE_WRITE_ERROR;
+
+	if (file_size != nullptr)
+		*file_size = packet_buffer.GetSize();
+
+	return PI_CAMERA_ERROR_CODE_SUCCESS;
+}
+bool      pi_camera_net_complete_capture_video(AL::Network::TcpSocket& socket, AL::uint8 error_code, const char* file_path)
+{
+	if (error_code != PI_CAMERA_ERROR_CODE_SUCCESS)
+		return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_CAPTURE_VIDEO, error_code, nullptr, 0);
+
+	AL::uint32 file_size;
+
+	if (!pi_camera_file_get_size(file_path, file_size))
+		return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_CAPTURE_VIDEO, PI_CAMERA_ERROR_CODE_FILE_STAT_ERROR, nullptr, 0);
+
+	pi_camera_packet_buffer packet_buffer(file_size);
+
+	if (!pi_camera_file_read(file_path, &packet_buffer[0], file_size))
+		return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_CAPTURE_VIDEO, PI_CAMERA_ERROR_CODE_FILE_READ_ERROR, nullptr, 0);
+
+	return pi_camera_net_send_packet(socket, PI_CAMERA_OPCODE_CAPTURE_VIDEO, PI_CAMERA_ERROR_CODE_SUCCESS, &packet_buffer[0], packet_buffer.GetSize());
+}
+
 bool pi_camera_service_packet_handler_is_busy(pi_camera_service* camera_service, pi_camera_session* camera_session, const pi_camera_packet_header& header, const AL::uint8* buffer, AL::size_t size)
 {
 	bool      value;
@@ -1494,9 +1540,20 @@ bool pi_camera_service_packet_handler_set_image_rotation(pi_camera_service* came
 }
 bool pi_camera_service_packet_handler_capture(pi_camera_service* camera_service, pi_camera_session* camera_session, const pi_camera_packet_header& header, const AL::uint8* buffer, AL::size_t size)
 {
-	auto      file_path  = AL::String::Format("./pi_image_%lu.jpg", ++camera_service->image_counter);
+	auto      file_path  = AL::String::Format("./pi_image_%llu.jpg", ++camera_service->image_counter);
 	AL::uint8 error_code = pi_camera_capture(camera_service, file_path.GetCString(), nullptr);
 	bool      result     = pi_camera_net_complete_capture(camera_session->socket, error_code, file_path.GetCString());
+
+	pi_camera_file_delete(file_path.GetCString());
+
+	return result;
+}
+bool pi_camera_service_packet_handler_capture_video(pi_camera_service* camera_service, pi_camera_session* camera_session, const pi_camera_packet_header& header, const AL::uint8* buffer, AL::size_t size)
+{
+	auto      video_length_seconds = AL::BitConverter::NetworkToHost(*reinterpret_cast<const AL::uint32*>(buffer));
+	auto      file_path            = AL::String::Format("./pi_video_%llu.mp4", ++camera_service->video_counter);
+	AL::uint8 error_code           = pi_camera_capture_video(camera_service, file_path.GetCString(), video_length_seconds, nullptr);
+	bool      result               = pi_camera_net_complete_capture_video(camera_session->socket, error_code, file_path.GetCString());
 
 	pi_camera_file_delete(file_path.GetCString());
 
@@ -1552,7 +1609,8 @@ constexpr pi_camera_service_packet_handler_context pi_camera_service_packet_hand
 	{ PI_CAMERA_OPCODE_GET_IMAGE_ROTATION, &pi_camera_service_packet_handler_get_image_rotation },
 	{ PI_CAMERA_OPCODE_SET_IMAGE_ROTATION, &pi_camera_service_packet_handler_set_image_rotation },
 
-	{ PI_CAMERA_OPCODE_CAPTURE,            &pi_camera_service_packet_handler_capture }
+	{ PI_CAMERA_OPCODE_CAPTURE,            &pi_camera_service_packet_handler_capture },
+	{ PI_CAMERA_OPCODE_CAPTURE_VIDEO,      &pi_camera_service_packet_handler_capture_video }
 };
 
 pi_camera_session* pi_camera_open_session(pi_camera_service* camera_service, AL::Network::TcpSocket&& socket);
@@ -1753,7 +1811,7 @@ AL::uint8 pi_camera_cli_execute(pi_camera_local* camera_local, const char* file_
 	{
 		AL::OS::Shell::Execute(
 			"raspistill",
-			AL::String::Format("%s -o %s", camera_local->cli_params.GetCString(), file_path)
+			AL::String::Format("%s -o \"%s\"", camera_local->cli_params.GetCString(), file_path)
 		);
 	}
 	catch (const AL::Exception& exception)
@@ -2030,6 +2088,66 @@ void      pi_camera_cli_build_params(pi_camera_local* camera_local)
 	camera_local->cli_params = sb.ToString();
 }
 
+AL::uint8 pi_camera_cli_video_execute(pi_camera_local* camera_local, const char* file_path, AL::uint32 video_length_seconds)
+{
+	if (camera_local->is_busy)
+		return PI_CAMERA_ERROR_CODE_CAMERA_BUSY;
+
+	try
+	{
+		AL::OS::Shell::Execute(
+			"raspivid",
+			AL::String::Format("%s -t %s -o \"%s.h264\"", camera_local->cli_params_video.GetCString(), AL::ToString(video_length_seconds * 1000).GetCString(), file_path)
+		);
+
+		AL::OS::Shell::Execute(
+			"mp4box",
+			AL::String::Format("-add \"%s.h264\" \"%s\"", file_path, file_path)
+		);
+
+		AL::FileSystem::File::Delete(
+			AL::String::Format("%s.h264", file_path)
+		);
+	}
+	catch (const AL::Exception& exception)
+	{
+
+		return PI_CAMERA_ERROR_CODE_CAMERA_FAILED;
+	}
+
+	return PI_CAMERA_ERROR_CODE_SUCCESS;
+}
+void      pi_camera_cli_video_build_params_append_bit_rate(AL::StringBuilder& sb, const pi_camera_config& camera_config)
+{
+	// TODO: implement
+}
+void      pi_camera_cli_video_build_params_append_frame_rate(AL::StringBuilder& sb, const pi_camera_config& camera_config)
+{
+	// TODO: implement
+}
+void      pi_camera_cli_video_build_params(pi_camera_local* camera_local)
+{
+	// https://www.raspberrypi.org/app/uploads/2013/07/RaspiCam-Documentation.pdf
+
+	AL::StringBuilder sb;
+
+	pi_camera_cli_build_params_append_ev(sb, camera_local->config);
+	pi_camera_cli_build_params_append_iso(sb, camera_local->config);
+	pi_camera_cli_build_params_append_contrast(sb, camera_local->config);
+	pi_camera_cli_build_params_append_sharpness(sb, camera_local->config);
+	pi_camera_cli_build_params_append_brightness(sb, camera_local->config);
+	pi_camera_cli_build_params_append_white_balance(sb, camera_local->config);
+	pi_camera_cli_build_params_append_exposure_mode(sb, camera_local->config);
+	pi_camera_cli_build_params_append_metoring_mode(sb, camera_local->config);
+	pi_camera_cli_build_params_append_image_effect(sb, camera_local->config);
+	pi_camera_cli_build_params_append_image_rotation(sb, camera_local->config);
+
+	pi_camera_cli_video_build_params_append_bit_rate(sb, camera_local->config);
+	pi_camera_cli_video_build_params_append_frame_rate(sb, camera_local->config);
+
+	camera_local->cli_params_video = sb.ToString();
+}
+
 const char* PI_CAMERA_API_CALL pi_camera_get_error_string(AL::uint8 value)
 {
 	switch (value)
@@ -2051,6 +2169,7 @@ pi_camera* PI_CAMERA_API_CALL  pi_camera_open()
 	auto camera = new pi_camera_local();
 
 	pi_camera_cli_build_params(camera);
+	pi_camera_cli_video_build_params(camera);
 
 	return camera;
 }
@@ -2082,6 +2201,7 @@ pi_camera* PI_CAMERA_API_CALL  pi_camera_open_service(const char* local_host, AL
 	auto camera = new pi_camera_service(AL::Move(local_end_point), max_connections);
 
 	pi_camera_cli_build_params(&camera->local);
+	pi_camera_cli_video_build_params(&camera->local);
 
 	if (!pi_camera_service_start(camera))
 	{
@@ -2199,6 +2319,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_ev(pi_camera* camera, AL::int8 valu
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.ev = pi_camera_clamp_ev(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2241,6 +2362,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_iso(pi_camera* camera, AL::uint16 v
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.iso = pi_camera_clamp_iso(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2297,6 +2419,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_config(pi_camera* camera, const pi_
 			static_cast<pi_camera_local*>(camera)->config.image_effect      = value->image_effect;
 			static_cast<pi_camera_local*>(camera)->config.image_rotation    = pi_camera_clamp_image_rotation(value->image_rotation);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2339,6 +2462,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_contrast(pi_camera* camera, AL::int
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.contrast = pi_camera_clamp_contrast(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2381,6 +2505,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_sharpness(pi_camera* camera, AL::in
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.sharpness = pi_camera_clamp_sharpness(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2423,6 +2548,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_brightness(pi_camera* camera, AL::u
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.brightness = pi_camera_clamp_brightness(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2465,6 +2591,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_saturation(pi_camera* camera, AL::i
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.saturation = pi_camera_clamp_saturation(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2507,6 +2634,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_white_balance(pi_camera* camera, AL
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.white_balance = value;
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2549,6 +2677,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_shutter_speed(pi_camera* camera, AL
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.shutter_speed_us = pi_camera_clamp_shutter_speed(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2591,6 +2720,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_exposure_mode(pi_camera* camera, AL
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.exposure_mode = value;
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2633,6 +2763,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_metoring_mode(pi_camera* camera, AL
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.metoring_mode = value;
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2675,6 +2806,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_jpg_quality(pi_camera* camera, AL::
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.jpg_quality = pi_camera_clamp_jpg_quality(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2719,6 +2851,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_size(pi_camera* camera, AL::u
 			static_cast<pi_camera_local*>(camera)->config.image_size_width  = pi_camera_clamp_image_size_width(width);
 			static_cast<pi_camera_local*>(camera)->config.image_size_height = pi_camera_clamp_image_size_height(height);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2761,6 +2894,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_effect(pi_camera* camera, AL:
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.image_effect = value;
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2803,6 +2937,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_rotation(pi_camera* camera, A
 		case PI_CAMERA_TYPE_LOCAL:
 			static_cast<pi_camera_local*>(camera)->config.image_rotation = pi_camera_clamp_image_rotation(value);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
+			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
 
 		case PI_CAMERA_TYPE_REMOTE:
@@ -2818,6 +2953,7 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_rotation(pi_camera* camera, A
 	return PI_CAMERA_ERROR_CODE_UNDEFINED;
 }
 
+// @param file_size can be nullptr
 AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* file_path, AL::uint64* file_size)
 {
 	switch (camera->type)
@@ -2833,6 +2969,26 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* 
 
 		case PI_CAMERA_TYPE_SESSION:
 			return pi_camera_capture(&static_cast<pi_camera_session*>(camera)->service->local, file_path, file_size);
+	}
+
+	return PI_CAMERA_ERROR_CODE_UNDEFINED;
+}
+// @param file_size can be nullptr
+AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture_video(pi_camera* camera, const char* file_path, AL::uint32 video_length_seconds, AL::uint64* file_size)
+{
+	switch (camera->type)
+	{
+		case PI_CAMERA_TYPE_LOCAL:
+			return pi_camera_cli_video_execute(static_cast<pi_camera_local*>(camera), file_path, video_length_seconds);
+
+		case PI_CAMERA_TYPE_REMOTE:
+			return pi_camera_net_begin_capture_video(static_cast<pi_camera_remote*>(camera)->socket, file_path, video_length_seconds, file_size);
+
+		case PI_CAMERA_TYPE_SERVICE:
+			return pi_camera_capture_video(&static_cast<pi_camera_service*>(camera)->local, file_path, video_length_seconds, file_size);
+
+		case PI_CAMERA_TYPE_SESSION:
+			return pi_camera_capture_video(&static_cast<pi_camera_session*>(camera)->service->local, file_path, video_length_seconds, file_size);
 	}
 
 	return PI_CAMERA_ERROR_CODE_UNDEFINED;
