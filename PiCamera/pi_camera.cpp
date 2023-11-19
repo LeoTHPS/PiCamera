@@ -1514,7 +1514,7 @@ bool pi_camera_service_packet_handler_capture(pi_camera_service* camera_service,
 	return result;
 }
 
-pi_camera_service_packet_handler_context pi_camera_service_packet_handlers[PI_CAMERA_OPCODE_COUNT] =
+constexpr pi_camera_service_packet_handler_context pi_camera_service_packet_handlers[PI_CAMERA_OPCODE_COUNT] =
 {
 	{ PI_CAMERA_OPCODE_IS_BUSY,            &pi_camera_service_packet_handler_is_busy },
 
