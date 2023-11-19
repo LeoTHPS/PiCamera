@@ -471,6 +471,8 @@ auto pi_camera_config_to_packet_buffer(const pi_camera_config& value)
 	camera_config->image_rotation    = AL::BitConverter::HostToNetwork(value.image_rotation);
 	camera_config->image_size_width  = AL::BitConverter::HostToNetwork(value.image_size_width);
 	camera_config->image_size_height = AL::BitConverter::HostToNetwork(value.image_size_height);
+	camera_config->video_bit_rate    = AL::BitConverter::HostToNetwork(value.video_bit_rate);
+	camera_config->video_frame_rate  = AL::BitConverter::HostToNetwork(value.video_frame_rate);
 
 	return packet_buffer;
 }
@@ -494,6 +496,8 @@ auto pi_camera_config_from_packet_buffer(const void* buffer, AL::size_t size)
 	camera_config.image_rotation    = AL::BitConverter::NetworkToHost(camera_config_src->image_rotation);
 	camera_config.image_size_width  = AL::BitConverter::NetworkToHost(camera_config_src->image_size_width);
 	camera_config.image_size_height = AL::BitConverter::NetworkToHost(camera_config_src->image_size_height);
+	camera_config.video_bit_rate    = AL::BitConverter::NetworkToHost(camera_config_src->video_bit_rate);
+	camera_config.video_frame_rate  = AL::BitConverter::NetworkToHost(camera_config_src->video_frame_rate);
 
 	return camera_config;
 }
@@ -2561,6 +2565,8 @@ AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_config(pi_camera* camera, const pi_
 			static_cast<pi_camera_local*>(camera)->config.image_size_height = pi_camera_clamp_image_size_height(value->image_size_height);
 			static_cast<pi_camera_local*>(camera)->config.image_effect      = value->image_effect;
 			static_cast<pi_camera_local*>(camera)->config.image_rotation    = pi_camera_clamp_image_rotation(value->image_rotation);
+			static_cast<pi_camera_local*>(camera)->config.video_bit_rate    = pi_camera_clamp_video_bit_rate(value->video_bit_rate);
+			static_cast<pi_camera_local*>(camera)->config.video_frame_rate  = pi_camera_clamp_video_frame_rate(value->video_frame_rate);
 			pi_camera_cli_build_params(static_cast<pi_camera_local*>(camera));
 			pi_camera_cli_video_build_params(static_cast<pi_camera_local*>(camera));
 			return PI_CAMERA_ERROR_CODE_SUCCESS;
