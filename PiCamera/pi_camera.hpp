@@ -223,69 +223,69 @@ extern "C"
 {
 	PI_CAMERA_API_EXPORT const char* PI_CAMERA_API_CALL pi_camera_get_error_string(AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT pi_camera* PI_CAMERA_API_CALL  pi_camera_open();
-	PI_CAMERA_API_EXPORT pi_camera* PI_CAMERA_API_CALL  pi_camera_open_remote(const char* remote_host, AL::uint16 remote_port);
-	PI_CAMERA_API_EXPORT pi_camera* PI_CAMERA_API_CALL  pi_camera_open_service(const char* local_host, AL::uint16 local_port, AL::size_t max_connections);
-	PI_CAMERA_API_EXPORT void       PI_CAMERA_API_CALL  pi_camera_close(pi_camera* camera);
+	PI_CAMERA_API_EXPORT pi_camera*  PI_CAMERA_API_CALL  pi_camera_open();
+	PI_CAMERA_API_EXPORT pi_camera*  PI_CAMERA_API_CALL  pi_camera_open_remote(const char* remote_host, AL::uint16 remote_port);
+	PI_CAMERA_API_EXPORT pi_camera*  PI_CAMERA_API_CALL  pi_camera_open_service(const char* local_host, AL::uint16 local_port, AL::size_t max_connections);
+	PI_CAMERA_API_EXPORT void        PI_CAMERA_API_CALL  pi_camera_close(pi_camera* camera);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_is_busy(pi_camera* camera, bool* value);
-	PI_CAMERA_API_EXPORT bool       PI_CAMERA_API_CALL  pi_camera_is_remote(pi_camera* camera);
-	PI_CAMERA_API_EXPORT bool       PI_CAMERA_API_CALL  pi_camera_is_service(pi_camera* camera);
-	PI_CAMERA_API_EXPORT bool       PI_CAMERA_API_CALL  pi_camera_is_connected(pi_camera* camera);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_is_busy(pi_camera* camera, bool* value);
+	PI_CAMERA_API_EXPORT bool        PI_CAMERA_API_CALL  pi_camera_is_remote(pi_camera* camera);
+	PI_CAMERA_API_EXPORT bool        PI_CAMERA_API_CALL  pi_camera_is_service(pi_camera* camera);
+	PI_CAMERA_API_EXPORT bool        PI_CAMERA_API_CALL  pi_camera_is_connected(pi_camera* camera);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_ev(pi_camera* camera, AL::int8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_ev(pi_camera* camera, AL::int8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_ev(pi_camera* camera, AL::int8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_ev(pi_camera* camera, AL::int8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_iso(pi_camera* camera, AL::uint16* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_iso(pi_camera* camera, AL::uint16 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_iso(pi_camera* camera, AL::uint16* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_iso(pi_camera* camera, AL::uint16 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_config(pi_camera* camera, pi_camera_config* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_config(pi_camera* camera, const pi_camera_config* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_config(pi_camera* camera, pi_camera_config* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_config(pi_camera* camera, const pi_camera_config* value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_contrast(pi_camera* camera, AL::int8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_contrast(pi_camera* camera, AL::int8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_contrast(pi_camera* camera, AL::int8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_contrast(pi_camera* camera, AL::int8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_sharpness(pi_camera* camera, AL::int8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_sharpness(pi_camera* camera, AL::int8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_sharpness(pi_camera* camera, AL::int8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_sharpness(pi_camera* camera, AL::int8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_brightness(pi_camera* camera, AL::uint8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_brightness(pi_camera* camera, AL::uint8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_brightness(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_brightness(pi_camera* camera, AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_saturation(pi_camera* camera, AL::int8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_saturation(pi_camera* camera, AL::int8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_saturation(pi_camera* camera, AL::int8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_saturation(pi_camera* camera, AL::int8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_white_balance(pi_camera* camera, AL::uint8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_white_balance(pi_camera* camera, AL::uint8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_white_balance(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_white_balance(pi_camera* camera, AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_shutter_speed(pi_camera* camera, AL::uint64* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_shutter_speed(pi_camera* camera, AL::uint64 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_shutter_speed(pi_camera* camera, AL::uint64* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_shutter_speed(pi_camera* camera, AL::uint64 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_exposure_mode(pi_camera* camera, AL::uint8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_exposure_mode(pi_camera* camera, AL::uint8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_exposure_mode(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_exposure_mode(pi_camera* camera, AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_metoring_mode(pi_camera* camera, AL::uint8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_metoring_mode(pi_camera* camera, AL::uint8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_metoring_mode(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_metoring_mode(pi_camera* camera, AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_jpg_quality(pi_camera* camera, AL::uint8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_jpg_quality(pi_camera* camera, AL::uint8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_jpg_quality(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_jpg_quality(pi_camera* camera, AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_image_size(pi_camera* camera, AL::uint16* width, AL::uint16* height);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_size(pi_camera* camera, AL::uint16 width, AL::uint16 height);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_image_size(pi_camera* camera, AL::uint16* width, AL::uint16* height);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_image_size(pi_camera* camera, AL::uint16 width, AL::uint16 height);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_image_effect(pi_camera* camera, AL::uint8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_effect(pi_camera* camera, AL::uint8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_image_effect(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_image_effect(pi_camera* camera, AL::uint8 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_image_rotation(pi_camera* camera, AL::uint16* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_image_rotation(pi_camera* camera, AL::uint16 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_image_rotation(pi_camera* camera, AL::uint16* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_image_rotation(pi_camera* camera, AL::uint16 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_video_bit_rate(pi_camera* camera, AL::uint32* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_video_bit_rate(pi_camera* camera, AL::uint32 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_video_bit_rate(pi_camera* camera, AL::uint32* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_video_bit_rate(pi_camera* camera, AL::uint32 value);
 
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_get_video_frame_rate(pi_camera* camera, AL::uint8* value);
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_set_video_frame_rate(pi_camera* camera, AL::uint8 value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_get_video_frame_rate(pi_camera* camera, AL::uint8* value);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_set_video_frame_rate(pi_camera* camera, AL::uint8 value);
 
 	// @param file_size can be nullptr
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* file_path, AL::uint64* file_size);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_capture(pi_camera* camera, const char* file_path, AL::uint64* file_size);
 	// @param file_size can be nullptr
-	PI_CAMERA_API_EXPORT AL::uint8  PI_CAMERA_API_CALL  pi_camera_capture_video(pi_camera* camera, const char* file_path, AL::uint32 video_length_seconds, AL::uint64* file_size);
+	PI_CAMERA_API_EXPORT AL::uint8   PI_CAMERA_API_CALL  pi_camera_capture_video(pi_camera* camera, const char* file_path, AL::uint32 video_length_seconds, AL::uint64* file_size);
 }
