@@ -36,13 +36,18 @@ ifdef PLATFORM
 	endif
 endif
 
-.PHONY: clean
+LDFLAGS_API  = $(LDFLAGS) -shared
+CXXFLAGS_API = $(CXXFLAGS) -fPIC
+
+.PHONY: all clean
+
+all: PiCamera PiCamera.API
 
 PiCamera: $(OBJECT_FILES)
 	$(CXX) $(CPPFLAGS) -DPI_CAMERA_BIN $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 PiCamera.API: $(OBJECT_FILES_API)
-	$(CXX) $(CPPFLAGS) -DPI_CAMERA_API $(CXXFLAGS) -fPIC -shared $^ -o $@$(API_FILE_EXTENSION) $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CPPFLAGS) -DPI_CAMERA_API $(CXXFLAGS_API) $^ -o $@$(API_FILE_EXTENSION) $(LDFLAGS_API) $(LDLIBS)
 
 clean:
 	$(RM) $(OBJECT_FILES)
