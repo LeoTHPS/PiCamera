@@ -645,10 +645,25 @@ bool main_args_interactive_prompt(const char* output, T& input)
 // @return -1 on invalid value
 int  main_args_interactive_prompt_verb()
 {
+#if !defined(PI_CAMERA_DEBUG) && !defined(AL_PLATFORM_LINUX)
+	camera_args.verb = PI_CAMERA_VERB_CONNECT;
+	return 1;
+#endif
+
 	AL::String line;
 
-	if (!main_args_interactive_prompt("Open/Connect/Start", line))
-		return 0;
+	{
+		AL::StringBuilder sb;
+		sb.Append("Connect");
+#if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
+		sb.Append("/Open");
+#elif defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
+		sb.Append("/Start");
+#endif
+
+		if (!main_args_interactive_prompt(sb.ToString().GetCString(), line))
+			return 0;
+	}
 
 	if (line.Compare("Connect", AL::True))
 	{
@@ -676,10 +691,10 @@ bool main_args_interactive_prompt_verb_open()
 }
 bool main_args_interactive_prompt_verb_start()
 {
-	if (!main_args_interactive_prompt("Host", camera_args.host))
+	if (!main_args_interactive_prompt("Local Host", camera_args.host))
 		return false;
 
-	if (!main_args_interactive_prompt("Port", camera_args.port))
+	if (!main_args_interactive_prompt("Local Port", camera_args.port))
 		return false;
 
 	if (!main_args_interactive_prompt("Max Connections", camera_args.max_connections))
@@ -689,10 +704,10 @@ bool main_args_interactive_prompt_verb_start()
 }
 bool main_args_interactive_prompt_verb_connect()
 {
-	if (!main_args_interactive_prompt("Host", camera_args.host))
+	if (!main_args_interactive_prompt("Remote Host", camera_args.host))
 		return false;
 
-	if (!main_args_interactive_prompt("Port", camera_args.port))
+	if (!main_args_interactive_prompt("Remote Port", camera_args.port))
 		return false;
 
 	return true;
@@ -724,18 +739,19 @@ bool main_args_interactive()
 	return false;
 }
 
-bool main_init_open_camera()
+// @return PI_CAMERA_ERROR_CODE
+AL::uint8 main_init_open_camera()
 {
 	switch (camera_args.verb)
 	{
-		case PI_CAMERA_VERB_OPEN:    return (camera = pi_camera_open()) != nullptr;
-		case PI_CAMERA_VERB_START:   return (camera = pi_camera_open_service(camera_args.host.GetCString(), camera_args.port, camera_args.max_connections)) != nullptr;
-		case PI_CAMERA_VERB_CONNECT: return (camera = pi_camera_open_remote(camera_args.host.GetCString(), camera_args.port)) != nullptr;
+		case PI_CAMERA_VERB_OPEN:    return pi_camera_open(&camera);
+		case PI_CAMERA_VERB_START:   return pi_camera_open_service(&camera, camera_args.host.GetCString(), camera_args.port, camera_args.max_connections);
+		case PI_CAMERA_VERB_CONNECT: return pi_camera_open_remote(&camera, camera_args.host.GetCString(), camera_args.port);
 	}
 
-	return false;
+	return PI_CAMERA_ERROR_CODE_UNDEFINED;
 }
-bool main_init(int argc, char* argv[])
+bool      main_init(int argc, char* argv[])
 {
 	switch (main_args_decode(argc, argv))
 	{
@@ -750,16 +766,23 @@ bool main_init(int argc, char* argv[])
 			return false;
 	}
 
-	if (!main_init_open_camera())
+	AL::uint8 error_code;
+
+	if ((error_code = main_init_open_camera()) != PI_CAMERA_ERROR_CODE_SUCCESS)
 	{
-		AL::OS::Console::WriteLine("Error opening camera");
+		const char* error_message;
+
+		if (!pi_camera_get_error_string(&error_message, error_code))
+			error_message = "Undefined";
+
+		AL::OS::Console::WriteLine("Error opening camera: %s", error_message);
 
 		return false;
 	}
 
 	return true;
 }
-void main_deinit()
+void      main_deinit()
 {
 	pi_camera_close(camera);
 }
@@ -806,7 +829,12 @@ bool main_console_execute_command(const pi_camera_console_command& value)
 
 	if (error_code != PI_CAMERA_ERROR_CODE_SUCCESS)
 	{
-		if (!AL::OS::Console::WriteLine("%s returned %u: %s", pi_camera_console_command_to_string(value.type), error_code, pi_camera_get_error_string(error_code)))
+		const char* error_message;
+
+		if (!pi_camera_get_error_string(&error_message, error_code))
+			error_message = "Undefined";
+
+		if (!AL::OS::Console::WriteLine("%s returned %u: %s", pi_camera_console_command_to_string(value.type), error_code, error_message))
 			return false;
 
 		if (error_code == PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED)
@@ -1180,21 +1208,25 @@ AL::uint8 main_console_command_set_video_frame_rate(const pi_camera_console_comm
 }
 AL::uint8 main_console_command_capture(const pi_camera_console_command& command, pi_camera_console_command_result& command_result)
 {
-	AL::uint64 file_size;
-	auto       error_code = pi_camera_capture(camera, command.args.string.GetCString(), &file_size);
+	auto error_code = pi_camera_capture(camera, command.args.string.GetCString(), [](AL::uint64 file_size, AL::uint64 number_of_bytes_received, void* param)
+	{
+		AL::OS::Console::WriteLine("Received %llu/%llu bytes", number_of_bytes_received, file_size);
+	}, nullptr);
 
 	if (error_code == PI_CAMERA_ERROR_CODE_SUCCESS)
-		command_result.lines.PushBack(AL::String::Format("Saved %llu bytes to %s", file_size, command.args.string.GetCString()));
+		command_result.lines.PushBack(AL::String::Format("Image saved to %s", command.args.string.GetCString()));
 
 	return error_code;
 }
 AL::uint8 main_console_command_capture_video(const pi_camera_console_command& command, pi_camera_console_command_result& command_result)
 {
-	AL::uint64 file_size;
-	auto       error_code = pi_camera_capture_video(camera, command.args.string.GetCString(), command.args.uint32, &file_size);
+	auto error_code = pi_camera_capture_video(camera, command.args.string.GetCString(), command.args.uint32, [](AL::uint64 file_size, AL::uint64 number_of_bytes_received, void* param)
+	{
+		AL::OS::Console::WriteLine("Received %llu/%llu bytes", number_of_bytes_received, file_size);
+	}, nullptr);
 
 	if (error_code == PI_CAMERA_ERROR_CODE_SUCCESS)
-		command_result.lines.PushBack(AL::String::Format("Saved %llu bytes to %s", file_size, command.args.string.GetCString()));
+		command_result.lines.PushBack(AL::String::Format("Video saved to %s", command.args.string.GetCString()));
 
 	return error_code;
 }
