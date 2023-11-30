@@ -2516,7 +2516,7 @@ AL::uint8 PI_CAMERA_API_CALL pi_camera_open_remote(pi_camera** camera, const cha
 
 	return PI_CAMERA_ERROR_CODE_SUCCESS;
 }
-AL::uint8 PI_CAMERA_API_CALL pi_camera_open_service(pi_camera** camera, const char* local_host, AL::uint16 local_port, AL::size_t max_connections)
+AL::uint8 PI_CAMERA_API_CALL pi_camera_open_service(pi_camera** camera, const char* local_host, AL::uint16 local_port, AL::uint32 max_connections)
 {
 	AL::Network::IPEndPoint local_end_point;
 
