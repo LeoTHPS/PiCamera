@@ -656,9 +656,7 @@ int  main_args_interactive_prompt_verb()
 		AL::StringBuilder sb;
 		sb.Append("Connect");
 #if defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
-		sb.Append("/Open");
-#elif defined(PI_CAMERA_DEBUG) || defined(AL_PLATFORM_LINUX)
-		sb.Append("/Start");
+		sb.Append("/Open/Start");
 #endif
 
 		if (!main_args_interactive_prompt(sb.ToString().GetCString(), line))
