@@ -17,6 +17,7 @@
 #include <AL/Collections/LinkedList.hpp>
 
 #define PI_CAMERA_FILE_CHUNK_SIZE   1000000
+#define PI_CAMERA_ERROR_CODE_COUNT  (PI_CAMERA_ERROR_CODE_UNDEFINED + 1)
 #define PI_CAMERA_SERVICE_TICK_RATE 2
 
 enum PI_CAMERA_TYPES : AL::uint8
@@ -192,6 +193,12 @@ struct pi_camera_service
 };
 
 typedef AL::FileSystem::File pi_camera_file;
+
+struct pi_camera_error_string
+{
+	AL::uint8   code;
+	const char* string;
+};
 
 bool            pi_camera_file_get_size(const char* path, AL::uint64& value)
 {
@@ -1889,6 +1896,14 @@ constexpr pi_camera_service_packet_handler_context pi_camera_service_packet_hand
 	{ PI_CAMERA_OPCODE_CAPTURE_VIDEO,        &pi_camera_service_packet_handler_capture_video }
 };
 
+template<AL::size_t ... INDEXES>
+constexpr bool pi_camera_service_packet_handlers_is_valid(AL::Index_Sequence<INDEXES ...>)
+{
+	return ((pi_camera_service_packet_handlers[INDEXES].opcode == INDEXES) && ...);
+}
+
+static_assert(pi_camera_service_packet_handlers_is_valid(typename AL::Make_Index_Sequence<PI_CAMERA_OPCODE_COUNT>::Type {}));
+
 AL::uint8 pi_camera_open_session(pi_camera_session** camera_session, pi_camera_service* camera_service, AL::Network::TcpSocket&& socket);
 
 bool      pi_camera_service_accept_session(pi_camera_service* camera_service, pi_camera_session*& camera_session)
@@ -2439,29 +2454,39 @@ void      pi_camera_cli_video_build_params(pi_camera_local* camera_local)
 	camera_local->cli_params_video = sb.ToString();
 }
 
+constexpr pi_camera_error_string pi_camera_error_strings[PI_CAMERA_ERROR_CODE_COUNT] =
+{
+	{ PI_CAMERA_ERROR_CODE_SUCCESS,                  "Success" },
+	{ PI_CAMERA_ERROR_CODE_DNS_FAILED,               "DNS failed" },
+	{ PI_CAMERA_ERROR_CODE_CAMERA_BUSY,              "Camera busy" },
+	{ PI_CAMERA_ERROR_CODE_CAMERA_FAILED,            "Camera failed" },
+	{ PI_CAMERA_ERROR_CODE_FILE_OPEN_ERROR,          "File open error" },
+	{ PI_CAMERA_ERROR_CODE_FILE_STAT_ERROR,          "File stat error" },
+	{ PI_CAMERA_ERROR_CODE_FILE_READ_ERROR,          "File read error" },
+	{ PI_CAMERA_ERROR_CODE_FILE_WRITE_ERROR,         "File write error" },
+	{ PI_CAMERA_ERROR_CODE_THREAD_START_FAILED,      "Thread start failed" },
+	{ PI_CAMERA_ERROR_CODE_CONNECTION_FAILED,        "Connection failed" },
+	{ PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED,        "Connection closed" },
+	{ PI_CAMERA_ERROR_CODE_CONNECTION_LISTEN_FAILED, "Connection listen failed" },
+	{ PI_CAMERA_ERROR_CODE_UNDEFINED,                "Undefined" }
+};
+
+template<AL::size_t ... INDEXES>
+constexpr bool pi_camera_error_strings_is_valid(AL::Index_Sequence<INDEXES ...>)
+{
+	return ((pi_camera_error_strings[INDEXES].code == INDEXES) && ...);
+}
+
+static_assert(pi_camera_error_strings_is_valid(typename AL::Make_Index_Sequence<PI_CAMERA_ERROR_CODE_COUNT>::Type {}));
+
 bool      PI_CAMERA_API_CALL pi_camera_get_error_string(const char** value, AL::uint8 error_code)
 {
-	#define pi_camera_return_error_string(__value__) *value = __value__; return true
+	if (error_code >= PI_CAMERA_ERROR_CODE_COUNT)
+		return false;
 
-	switch (error_code)
-	{
-		case PI_CAMERA_ERROR_CODE_SUCCESS:                  pi_camera_return_error_string("Success");
-		case PI_CAMERA_ERROR_CODE_DNS_FAILED:               pi_camera_return_error_string("DNS failed");
-		case PI_CAMERA_ERROR_CODE_CAMERA_BUSY:              pi_camera_return_error_string("Camera busy");
-		case PI_CAMERA_ERROR_CODE_CAMERA_FAILED:            pi_camera_return_error_string("Camera failed");
-		case PI_CAMERA_ERROR_CODE_FILE_OPEN_ERROR:          pi_camera_return_error_string("File open error");
-		case PI_CAMERA_ERROR_CODE_FILE_STAT_ERROR:          pi_camera_return_error_string("File stat error");
-		case PI_CAMERA_ERROR_CODE_FILE_READ_ERROR:          pi_camera_return_error_string("File read error");
-		case PI_CAMERA_ERROR_CODE_FILE_WRITE_ERROR:         pi_camera_return_error_string("File write error");
-		case PI_CAMERA_ERROR_CODE_THREAD_START_FAILED:      pi_camera_return_error_string("Thread start failed");
-		case PI_CAMERA_ERROR_CODE_CONNECTION_FAILED:        pi_camera_return_error_string("Connection failed");
-		case PI_CAMERA_ERROR_CODE_CONNECTION_CLOSED:        pi_camera_return_error_string("Connection closed");
-		case PI_CAMERA_ERROR_CODE_CONNECTION_LISTEN_FAILED: pi_camera_return_error_string("Connection listen failed");
-	}
+	*value = pi_camera_error_strings[error_code].string;
 
-	#undef pi_camera_return_error_string
-
-	return false;
+	return true;
 }
 
 AL::uint8 PI_CAMERA_API_CALL pi_camera_open(pi_camera** camera)
